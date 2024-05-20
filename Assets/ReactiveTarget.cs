@@ -6,6 +6,7 @@ public class ReactiveTarget : MonoBehaviour
 {
     public void ReactToHit()
     {
+        Debug.Log("target hit");
         StartCoroutine(Die());
     }
     private IEnumerator Die()

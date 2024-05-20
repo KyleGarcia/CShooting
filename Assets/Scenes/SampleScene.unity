@@ -1508,8 +1508,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c24e6bf14b6230646b670938d1cbb189, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skeetPrefab: {fileID: 7147988065205312460, guid: 59f8084c623f9614f8db84874459f3bc, type: 3}
+  skeetPrefabs:
+  - {fileID: 7147988065205312460, guid: 59f8084c623f9614f8db84874459f3bc, type: 3}
+  - {fileID: 3115651710940497570, guid: 19c241c23ce8c6e449bc8b095528e48b, type: 3}
+  - {fileID: 2517212734257429559, guid: 371d9331b43d1594b8336672b025b927, type: 3}
+  - {fileID: 6341128067868387220, guid: 484cfede30e6afb46a3d20d9dd3f86e8, type: 3}
   spawnDelay: 2
+  respawnDelay: 5
 --- !u!4 &1471189396
 Transform:
   m_ObjectHideFlags: 0
