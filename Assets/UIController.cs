@@ -10,10 +10,11 @@ public class UIController : MonoBehaviour {
    void Start ()
     {
         settingsPopup.Close();
+        
     }
  
    void Update() {
-      scoreLabel.text = Time.realtimeSinceStartup.ToString();
+      
    }
    public void OnPointerDown()
     {

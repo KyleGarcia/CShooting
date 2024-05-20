@@ -9,13 +9,17 @@ public class TriviaManager : MonoBehaviour
     [SerializeField] private TMP_Text questionText;
     [SerializeField] private TMP_Text[] answerTexts; // Array to hold answer text elements
     [SerializeField] private GameObject readyButton;
+    [SerializeField] private TMP_Text timerText; // Timer text for countdown
+    [SerializeField] private TMP_Text scoreText; // For keeping track of score
     [SerializeField] private float displayQuestionTime = 5.0f;
+    [SerializeField] private SceneController sceneController;
     
     private int currentQuestionIndex = 0;
     private List<Question> questions = new List<Question>(); // List of questions
     private int score = 0;
     private int failedQuestions = 0;
     private const int maxFailedQuestions = 3;
+    private float questionTimer; // Timer for current question
 
     void Start()
     {
@@ -26,10 +30,9 @@ public class TriviaManager : MonoBehaviour
 
     void LoadQuestions()
     {
-        // Load your questions here
+        // Load questions here
         questions.Add(new Question("What does CPU stand for?", new string[] { "Central Processing Unit", "Computer Personal Unit", "Central Processor Unit", "Computer Processing Unit" }, 0));
         questions.Add(new Question("What does GPU stand for?", new string[] { "Graphics Processing Unit", "Graphical Processing Unit", "Graphics Processor Unit", "Graphical Processor Unit" }, 0));
-        
     }
 
     public void OnReadyButtonClicked()
@@ -60,17 +63,25 @@ public class TriviaManager : MonoBehaviour
             answerTexts[i].text = question.Answers[i];
             answerTexts[i].color = GetColorForAnswer(i); // Set color based on index
         }
+        questionTimer = displayQuestionTime;
         StartCoroutine(HideQuestionAfterDelay());
     }
 
     IEnumerator HideQuestionAfterDelay()
     {
-        yield return new WaitForSeconds(displayQuestionTime);
+        while (questionTimer > 0)
+        {
+            timerText.text = "Time: " + questionTimer.ToString("F1");
+            questionTimer -= Time.deltaTime;
+            yield return null;
+        }
+        timerText.text = "";
         settingsPopup.SetActive(false);
         // Logic to start spawning skeets
+        sceneController.StartSpawningSkeets();
     }
 
-    Color GetColorForAnswer(int index)
+    public Color GetColorForAnswer(int index)
     {
         switch (index)
         {
@@ -88,11 +99,13 @@ public class TriviaManager : MonoBehaviour
         {
             score++;
             Debug.Log("Correct!");
+            HighlightAnswer(index, Color.green);
         }
         else
         {
             failedQuestions++;
             Debug.Log("Wrong!");
+            HighlightAnswer(index, Color.red);
             if (failedQuestions >= maxFailedQuestions)
             {
                 EndGame();
@@ -101,6 +114,27 @@ public class TriviaManager : MonoBehaviour
         }
         currentQuestionIndex = (currentQuestionIndex + 1) % questions.Count;
         DisplayQuestion();
+    }
+
+    void HighlightAnswer(int index, Color color)
+    {
+        answerTexts[index].color = color;
+    }
+
+    void UpdateScore()
+    {
+        scoreText.text = "Score: " + score;
+    }
+
+    public void IncrementScore()
+    {
+        score++;
+        UpdateScore();
+    }
+
+    public int CurrentQuestionCorrectAnswerIndex
+    {
+        get { return questions[currentQuestionIndex].CorrectAnswerIndex; }
     }
 
     void EndGame()
