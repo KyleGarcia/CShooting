@@ -41,7 +41,7 @@ public class RayShooter : MonoBehaviour {
     private IEnumerator SphereIndicator(Vector3 pos) {
         GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         sphere.transform.position = pos;
-        sphere.GetComponent<Collider>().enabled = false;  // Disable the collider to prevent physical interactions
+        sphere.GetComponent<Collider>().enabled = false;  
 
         yield return new WaitForSeconds(1);
 
