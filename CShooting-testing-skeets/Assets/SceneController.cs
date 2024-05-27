@@ -13,6 +13,7 @@ public class SceneController : MonoBehaviour
     private int activeSkeets; // Counter to track the number of active skeets
     private bool gameStarted = false;
     private TriviaManager triviaManager;
+    private bool isSpawningSkeets = false; // Flag to prevent multiple launches
 
     public float spawnDelay = 2.0f; // Control the delay between skeet destruction and next spawn
     private float launchDelay = 0.5f; // Delay before launching skeets (applying force)
@@ -36,16 +37,34 @@ public class SceneController : MonoBehaviour
 
     public void StartSpawningSkeets()
     {
-        if (!gameStarted)
+        Debug.Log("StartSpawningSkeets function called at: " + Time.time);
+        StopAllCoroutines(); // Ensure any previous coroutines are stopped
+        StartCoroutine(SpawnAndLaunchSkeetsContinuously());
+    }
+
+    public void StopSpawningSkeets()
+    {
+        Debug.Log("StopSpawningSkeets called.");
+        StopAllCoroutines(); // Stop all coroutines related to spawning
+    }
+
+    IEnumerator SpawnAndLaunchSkeetsContinuously()
+    {
+        Debug.Log("SpawnAndLaunchSkeetsContinuously started.");
+        while (true)
         {
-            gameStarted = true;
-            StartCoroutine(SpawnAndLaunchSkeets());
+            if (!isSpawningSkeets)
+            {
+                yield return StartCoroutine(SpawnAndLaunchSkeets());
+                yield return new WaitForSeconds(spawnDelay); // Wait before respawning
+            }
+            yield return null; // Wait for the next frame before checking again
         }
     }
 
     IEnumerator SpawnAndLaunchSkeets()
     {
-        Debug.Log("SpawnAndLaunchSkeets coroutine started.");
+        isSpawningSkeets = true;
 
         // Clear any existing skeets
         foreach (GameObject skeet in skeets)
@@ -73,7 +92,9 @@ public class SceneController : MonoBehaviour
         LaunchAllSkeets();
 
         // Start the countdown timer for skeets
-        StartCoroutine(SkeetTimer());
+        yield return StartCoroutine(SkeetTimer());
+
+        isSpawningSkeets = false;
     }
 
     void SpawnSkeet(int colorIndex, int offset)
@@ -85,13 +106,13 @@ public class SceneController : MonoBehaviour
         Rigidbody rb = skeet.GetComponent<Rigidbody>();
         if (rb == null)
         {
-            rb = skeet.AddComponent<Rigidbody>(); // Add Rigidbody component if not already present
+            rb = skeet.AddComponent<Rigidbody>(); // Add Rigidbody component
         }
 
         SkeetPhysics skeetPhysics = skeet.GetComponent<SkeetPhysics>();
         if (skeetPhysics == null)
         {
-            skeetPhysics = skeet.AddComponent<SkeetPhysics>(); // Add SkeetPhysics component if not already present
+            skeetPhysics = skeet.AddComponent<SkeetPhysics>(); // Add SkeetPhysics component 
         }
 
         skeetPhysics.ResetVelocity(); // Reset velocity
@@ -105,11 +126,14 @@ public class SceneController : MonoBehaviour
 
     void LaunchAllSkeets()
     {
+        Debug.Log("Launching all skeets at: " + Time.time);
+
         foreach (GameObject skeet in skeets)
         {
             Rigidbody rb = skeet.GetComponent<Rigidbody>();
             if (rb != null)
             {
+                // Reset all relevant properties of the Rigidbody
                 rb.velocity = Vector3.zero; // Ensure starting from zero velocity
                 rb.angularVelocity = Vector3.zero; // Ensure no initial rotation
                 rb.drag = 0; // Reset drag
@@ -117,50 +141,49 @@ public class SceneController : MonoBehaviour
                 rb.useGravity = true; // Ensure gravity is applied
 
                 Debug.Log("Before launching - Position: " + skeet.transform.position + ", Velocity: " + rb.velocity + ", Force: " + initialForce);
-                rb.AddForce(initialForce, ForceMode.VelocityChange);
+
+                // apply force
+                rb.AddForce(initialForce, ForceMode.Impulse);
+
                 Debug.Log("After launching - Position: " + skeet.transform.position + ", Velocity: " + rb.velocity);
+            }
+            else
+            {
+                Debug.LogWarning("No Rigidbody attached to the skeet: " + skeet.name);
             }
         }
     }
 
     IEnumerator SkeetTimer()
     {
-        while (gameStarted)
+        float timer = 5.0f;
+        while (timer > 0)
         {
-            float timer = 5.0f;
-            while (timer > 0)
-            {
-                if (timerText != null)
-                {
-                    timerText.text = "Time: " + timer.ToString("F1");
-                }
-                timer -= Time.deltaTime;
-                yield return null;
-            }
-
             if (timerText != null)
             {
-                timerText.text = "Time: 0.0";
+                timerText.text = "Time: " + timer.ToString("F1");
             }
-
-            // Destroy all active skeets
-            foreach (GameObject skeet in skeets)
-            {
-                if (skeet != null)
-                {
-                    Destroy(skeet);
-                }
-            }
-
-            skeets.Clear();
-            activeSkeets = 0;
-            System.Array.Clear(skeetCounts, 0, skeetCounts.Length);
-
-            // Spawn new set of skeets
-            StartCoroutine(SpawnAndLaunchSkeets());
-
-            yield return new WaitForSeconds(launchDelay); // Wait before launching new skeets
+            timer -= Time.deltaTime;
+            yield return null;
         }
+
+        if (timerText != null)
+        {
+            timerText.text = "Time: 0.0";
+        }
+
+        // Destroy all active skeets
+        foreach (GameObject skeet in skeets)
+        {
+            if (skeet != null)
+            {
+                Destroy(skeet);
+            }
+        }
+
+        skeets.Clear();
+        activeSkeets = 0;
+        System.Array.Clear(skeetCounts, 0, skeetCounts.Length);
     }
 
     public void OnSkeetDestroyed(GameObject skeet)
@@ -173,6 +196,11 @@ public class SceneController : MonoBehaviour
             {
                 triviaManager.IncrementScore();
                 Debug.Log("Correct skeet hit. Incrementing score.");
+            }
+            else
+            {
+                triviaManager.DecrementScore();
+                Debug.Log("Wrong skeet hit. Decrementing score.");
             }
         }
 
@@ -205,5 +233,21 @@ public class SceneController : MonoBehaviour
             case 3: return Color.yellow;
             default: return Color.white;
         }
+    }
+
+    public void ResetSkeets()
+    {
+        // Destroy all active skeets
+        foreach (GameObject skeet in skeets)
+        {
+            if (skeet != null)
+            {
+                Destroy(skeet);
+            }
+        }
+        skeets.Clear();
+        activeSkeets = 0;
+        System.Array.Clear(skeetCounts, 0, skeetCounts.Length);
+        Debug.Log("Skeets have been reset.");
     }
 }
