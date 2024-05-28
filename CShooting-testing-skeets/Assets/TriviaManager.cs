@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
+
 
 public class TriviaManager : MonoBehaviour
 {
@@ -23,6 +25,8 @@ public class TriviaManager : MonoBehaviour
     private float questionTimer; // Timer for current question
     private bool isCoroutineRunning = false; // Tracking if the coroutine is already running
     private bool gameStarted = false;
+    private bool gameEnded = false; // New flag to track if the game has ended
+
 
     void Start()
     {
@@ -43,17 +47,22 @@ public class TriviaManager : MonoBehaviour
         Debug.Log("Questions loaded.");
     }
 
-    public void OnReadyButtonClicked()
+    public void StartGame()
     {
-        Debug.Log("OnReadyButtonClicked called.");
+        Debug.Log("StartGame called.");
         if (!gameStarted)
         {
             gameStarted = true;
             ResetGame();
             readyButton.SetActive(false);
             DisplayQuestion();
-            sceneController.StartSpawningSkeets(); // Start spawning skeets when the game starts
+            sceneController.StartSpawningSkeets();
         }
+    }
+
+    public void OnReadyButtonClicked()
+    {
+        StartGame();
     }
 
     void DisplayQuestion()
@@ -183,29 +192,41 @@ public class TriviaManager : MonoBehaviour
     }
 
     void EndGame()
-    {
-        Debug.Log("EndGame called. Final Score: " + score + ", Strikes: " + failedQuestions);
-        // Display final score and reset game
-        gameStarted = false; // Reset game started flag
-        isCoroutineRunning = false; // Reset coroutine flag
-        StopAllCoroutines(); // Stop all coroutines
-        ResetGame(); // Call the ResetGame method to reset all necessary variables and states
-    }
+{
+    Debug.Log("EndGame called. Final Score: " + score + ", Strikes: " + failedQuestions);
 
-    void ResetGame()
+    // Reset all necessary variables and states
+    gameStarted = false;
+    isCoroutineRunning = false;
+    StopAllCoroutines();
+    ResetGame();
+
+    // Reload the scene (assuming the scene name is "GameScene")
+    Scene scene = SceneManager.GetActiveScene();
+    SceneManager.LoadScene(scene.name);
+}
+
+void ResetGame()
+{
+    Debug.Log("ResetGame called.");
+    score = 0;
+    failedQuestions = 0;
+    currentQuestionIndex = 0;
+    UpdateScore();
+    UpdateStrikeCounter();
+    ClearQuestionAndAnswers();
+    sceneController.StopSpawningSkeets();
+    sceneController.ResetSkeets();
+    settingsPopup.SetActive(true);
+    readyButton.SetActive(true);
+    Debug.Log("Game has been reset.");
+}
+
+
+    void ResetUI()
     {
-        Debug.Log("ResetGame called.");
-        score = 0;
-        failedQuestions = 0;
-        currentQuestionIndex = 0; // Reset to start from the first question
-        UpdateScore();
-        UpdateStrikeCounter();
-        ClearQuestionAndAnswers(); // Clear the question and answers
-        sceneController.StopSpawningSkeets(); // Stop skeet spawning
-        sceneController.ResetSkeets();
-        settingsPopup.SetActive(true); 
-        readyButton.SetActive(true); 
-        Debug.Log("Game has been reset.");
+        settingsPopup.SetActive(true);
+        readyButton.SetActive(true);
     }
 
     void ClearQuestionAndAnswers()
@@ -214,7 +235,7 @@ public class TriviaManager : MonoBehaviour
         foreach (TMP_Text answerText in answerTexts)
         {
             answerText.text = "";
-            answerText.color = Color.white; // Reset color to default
+            answerText.color = Color.white;
         }
     }
 }
