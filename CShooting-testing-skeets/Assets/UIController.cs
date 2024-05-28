@@ -9,7 +9,7 @@ public class UIController : MonoBehaviour {
 
    void Start ()
     {
-        settingsPopup.Open();
+        //settingsPopup.Open();
         
     }
  

@@ -30,7 +30,7 @@ public class TriviaManager : MonoBehaviour
 
     void Start()
     {
-        settingsPopup.SetActive(true);
+        settingsPopup.SetActive(false);
         readyButton.SetActive(true);
         LoadQuestions();
         UpdateStrikeCounter(); // Initialize strike counter text
@@ -191,7 +191,7 @@ public class TriviaManager : MonoBehaviour
         get { return questions[currentQuestionIndex].CorrectAnswerIndex; }
     }
 
-    void EndGame()
+void EndGame()
 {
     Debug.Log("EndGame called. Final Score: " + score + ", Strikes: " + failedQuestions);
 
@@ -201,10 +201,21 @@ public class TriviaManager : MonoBehaviour
     StopAllCoroutines();
     ResetGame();
 
-    // Reload the scene (assuming the scene name is "GameScene")
-    Scene scene = SceneManager.GetActiveScene();
-    SceneManager.LoadScene(scene.name);
-}
+    // Start the overlay effect
+    FindObjectOfType<FadeEffect>().StartOverlay();
+
+    // Wait for 5 seconds before reloading the scene
+    StartCoroutine(ReloadSceneAfterDelay(5.0f));
+    }
+
+    IEnumerator ReloadSceneAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // Reload the scene (assuming the scene name is "GameScene")
+        Scene scene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(scene.name);
+    }
 
 void ResetGame()
 {
