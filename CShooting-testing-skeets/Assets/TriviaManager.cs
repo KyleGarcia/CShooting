@@ -40,10 +40,16 @@ public class TriviaManager : MonoBehaviour
     void LoadQuestions()
     {
         // Load questions here
-        questions.Add(new Question("What is the time complexity of a For loop? ", new string[] { "O(N)", "Log(N)", "O(N^2)", "O(2N)"}, 0));
-        questions.Add(new Question("What does CPU stand for?", new string[] { "Central Processing Unit", "Computer Personal Unit", "Central Processor Unit", "Computer Processing Unit" }, 0));
-        questions.Add(new Question("What does GPU stand for?", new string[] { "Graphics Processing Unit", "Graphical Processing Unit", "Graphics Processor Unit", "Graphical Processing Unit" }, 0));
-
+        questions.Add(new Question("What is the time complexity of a For loop? ", new string[] { "+O(N)", "-Log(N)", "-O(N^2)", "-O(2N)"}));
+        questions.Add(new Question("What does CPU stand for?", new string[] { "+Central Processing Unit", "-Computer Personal Unit", "-Central Processor Unit", "-Computer Processing Unit" }));
+        questions.Add(new Question("What does GPU stand for?", new string[] { "+Graphics Processing Unit", "-Graphical Processing Unit", "-Graphics Processor Unit", "-Graphical Processing Unit" }));
+        questions.Add(new Question("Which of the following sorting algorithms has the lowest average time complexity?", new string[] { "+Bucket Sort", "-Quick Sort", "-Insertion Sort", "-Bubble Sort" }));
+        questions.Add(new Question("Which of the following sorting algorithms has the lowest worst space complexity?", new string[] { "+Heap Sort", "-Bucket Sort", "-Merge Sort", "-Quick Sort" }));
+        questions.Add(new Question("Which of the following languages is not an object-oriented language?", new string[] { "+Pascal", "-Java", "-Visual Basic", "-PHP" }));
+        questions.Add(new Question("Which of the following is not a real programming language?", new string[] { "+C+", "-C-", "-C++", "-C#" }));
+        questions.Add(new Question("Which of the following languages is the oldest?", new string[] { "+Fortran", "-Basic", "-Pascal", "-C" }));
+        questions.Add(new Question("Which of the following is not a valid SQL keyword?", new string[] { "+REMOVE", "-update", "-SELECT", "-UPDATE" }));
+        questions.Add(new Question("What year was Python first published?", new string[] { "+1991", "-2005", "-1997", "-1985" }));
         Debug.Log("Questions loaded.");
     }
 
@@ -75,7 +81,7 @@ public class TriviaManager : MonoBehaviour
 
         for (int i = 0; i < answerTexts.Length; i++)
         {
-            answerTexts[i].text = question.Answers[i];
+            answerTexts[i].text = question.Answers[i].Substring(1);
             answerTexts[i].color = GetColorForAnswer(i); // Set color based on index
         }
 
@@ -258,10 +264,29 @@ public class Question
     public string[] Answers;
     public int CorrectAnswerIndex;
 
-    public Question(string text, string[] answers, int correctAnswerIndex)
+    public Question(string text, string[] answers)
     {
         Text = text;
         Answers = answers;
-        CorrectAnswerIndex = correctAnswerIndex;
+        CorrectAnswerIndex = 0;
+        shuffleAnswers();
+    }
+
+    public void shuffleAnswers()
+    {
+        for (int i = 0; i < Answers.Length; i++)
+        {
+            string temp = Answers[i];
+            int rand = Random.Range(i, Answers.Length);
+            Answers[i] = Answers[rand];
+            Answers[rand] = temp;
+        }
+        for (int i = 0; i < Answers.Length; i++)
+        {
+            if (Answers[i][0] == '+')
+            {
+                CorrectAnswerIndex = i;
+            }
+        }
     }
 }
