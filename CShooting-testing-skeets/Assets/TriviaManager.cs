@@ -4,7 +4,6 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
 
-
 public class TriviaManager : MonoBehaviour
 {
     [SerializeField] private GameObject settingsPopup;
@@ -26,7 +25,6 @@ public class TriviaManager : MonoBehaviour
     private bool isCoroutineRunning = false; // Tracking if the coroutine is already running
     private bool gameStarted = false;
     private bool gameEnded = false; // New flag to track if the game has ended
-
 
     void Start()
     {
@@ -69,14 +67,35 @@ public class TriviaManager : MonoBehaviour
     {
         Debug.Log("DisplayQuestion called with index: " + currentQuestionIndex);
 
+        // Ensure the game has not ended
+        if (gameEnded)
+        {
+            Debug.LogWarning("DisplayQuestion called but the game has ended.");
+            return;
+        }
+
+        // Ensure currentQuestionIndex is within bounds
+        if (currentQuestionIndex >= questions.Count)
+        {
+            Debug.LogWarning("No more questions available.");
+            return;
+        }
+
         // Set up the question and answers
         Question question = questions[currentQuestionIndex];
         questionText.text = question.Text;
 
         for (int i = 0; i < answerTexts.Length; i++)
         {
-            answerTexts[i].text = question.Answers[i];
-            answerTexts[i].color = GetColorForAnswer(i); // Set color based on index
+            if (i < question.Answers.Length)
+            {
+                answerTexts[i].text = question.Answers[i];
+                answerTexts[i].color = GetColorForAnswer(i); // Set color based on index
+            }
+            else
+            {
+                answerTexts[i].text = "";
+            }
         }
 
         questionTimer = displayQuestionTime;
@@ -113,6 +132,9 @@ public class TriviaManager : MonoBehaviour
         // Increment the question index and display the next question
         currentQuestionIndex = (currentQuestionIndex + 1) % questions.Count;
         Debug.Log("Incremented question index to: " + currentQuestionIndex);
+
+        // Show the next question
+        DisplayQuestion();
     }
 
     public Color GetColorForAnswer(int index)
@@ -191,21 +213,18 @@ public class TriviaManager : MonoBehaviour
         get { return questions[currentQuestionIndex].CorrectAnswerIndex; }
     }
 
-void EndGame()
-{
-    Debug.Log("EndGame called. Final Score: " + score + ", Strikes: " + failedQuestions);
+    void EndGame()
+    {
+        Debug.Log("EndGame called. Final Score: " + score + ", Strikes: " + failedQuestions);
 
-    // Reset all necessary variables and states
-    gameStarted = false;
-    isCoroutineRunning = false;
-    StopAllCoroutines();
-    ResetGame();
+        // Set the gameEnded flag to true
+        gameEnded = true;
 
-    // Start the overlay effect
-    FindObjectOfType<FadeEffect>().StartOverlay();
+        // Start the overlay effect
+        FindObjectOfType<FadeEffect>().StartOverlay();
 
-    // Wait for 5 seconds before reloading the scene
-    StartCoroutine(ReloadSceneAfterDelay(5.0f));
+        // Wait for 5 seconds before reloading the scene
+        StartCoroutine(ReloadSceneAfterDelay(5.0f));
     }
 
     IEnumerator ReloadSceneAfterDelay(float delay)
@@ -217,27 +236,20 @@ void EndGame()
         SceneManager.LoadScene(scene.name);
     }
 
-void ResetGame()
-{
-    Debug.Log("ResetGame called.");
-    score = 0;
-    failedQuestions = 0;
-    currentQuestionIndex = 0;
-    UpdateScore();
-    UpdateStrikeCounter();
-    ClearQuestionAndAnswers();
-    sceneController.StopSpawningSkeets();
-    sceneController.ResetSkeets();
-    settingsPopup.SetActive(true);
-    readyButton.SetActive(true);
-    Debug.Log("Game has been reset.");
-}
-
-
-    void ResetUI()
+    void ResetGame()
     {
-        settingsPopup.SetActive(true);
+        Debug.Log("ResetGame called.");
+        score = 0;
+        failedQuestions = 0;
+        currentQuestionIndex = 0;
+        UpdateScore();
+        UpdateStrikeCounter();
+        ClearQuestionAndAnswers();
+        sceneController.StopSpawningSkeets();
+        sceneController.ResetSkeets();
+        settingsPopup.SetActive(false);
         readyButton.SetActive(true);
+        Debug.Log("Game has been reset.");
     }
 
     void ClearQuestionAndAnswers()
